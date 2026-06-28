@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ma bibliothèque yoga</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f5f4f0;
+    color: #1a1a18;
+    min-height: 100vh;
+    padding: 1.5rem 1rem 3rem;
+  }
+  .app { max-width: 480px; margin: 0 auto; }
+
+  .header { margin-bottom: 1.5rem; }
+  .header h1 { font-size: 22px; font-weight: 600; color: #1a1a18; }
+  .header p { font-size: 13px; color: #888; margin-top: 3px; }
+
+  .section-label {
+    font-size: 11px; font-weight: 600; color: #aaa;
+    text-transform: uppercase; letter-spacing: 0.07em;
+    margin-bottom: 8px;
+  }
+
+  .cats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1.5rem; }
+  .cat-btn {
+    font-size: 13px; padding: 6px 13px;
+    border-radius: 20px; border: 1px solid #d8d6d0;
+    background: #fff; color: #555;
+    cursor: pointer; transition: all 0.12s;
+    white-space: nowrap; font-family: inherit;
+  }
+  .cat-btn:hover { border-color: #b0aaa0; background: #faf9f6; }
+  .cat-btn.active {
+    background: #e8f0fe; border-color: #a8bffd;
+    color: #2952c4; font-weight: 600;
+  }
+
+  .duration-row {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 1.5rem;
+  }
+  .duration-row label { font-size: 13px; color: #666; white-space: nowrap; }
+  .duration-row input[type=range] {
+    flex: 1; height: 4px; cursor: pointer;
+    accent-color: #2952c4;
+  }
+  .duration-row .val {
+    font-size: 13px; font-weight: 600; color: #1a1a18;
+    min-width: 65px; text-align: right;
+  }
+
+  .results-header {
+    display: flex; align-items: center;
+    justify-content: space-between; margin-bottom: 10px;
+  }
+  .count { font-size: 13px; color: #999; }
+  .reset-btn {
+    font-size: 12px; padding: 4px 10px;
+    border-radius: 6px; border: 1px solid #d8d6d0;
+    background: transparent; color: #666;
+    cursor: pointer; font-family: inherit;
+  }
+  .reset-btn:hover { background: #eee; }
+
+  .video-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .video-card {
+    background: #fff; border: 1px solid #e0ddd8;
+    border-radius: 12px; padding: 10px 12px 10px 10px;
+    display: flex; align-items: center; gap: 12px;
+    text-decoration: none; color: inherit;
+    transition: border-color 0.12s, background 0.12s;
+  }
+  .video-card:hover {
+    border-color: #a8bffd; background: #f0f4ff;
+  }
+  .video-card:active { transform: scale(0.99); }
+
+  .video-thumb {
+    width: 120px; height: 68px; border-radius: 8px;
+    object-fit: cover; flex-shrink: 0;
+    background: #e8f0fe;
+  }
+
+  .video-info { flex: 1; min-width: 0; }
+  .video-title {
+    font-size: 13px; font-weight: 400; color: #1a1a18;
+    line-height: 1.4;
+    display: -webkit-box; -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .video-meta { font-size: 11px; color: #aaa; margin-top: 4px; }
+
+  .arrow-icon { width: 14px; height: 14px; stroke: #bbb; flex-shrink: 0; }
+
+  .empty {
+    text-align: center; padding: 2.5rem 1rem;
+    color: #aaa; font-size: 14px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    body { background: #141412; color: #e8e6e0; }
+    .header h1 { color: #e8e6e0; }
+    .cat-btn { background: #222; border-color: #333; color: #aaa; }
+    .cat-btn:hover { background: #2a2a28; border-color: #444; }
+    .cat-btn.active { background: #1a2a4a; border-color: #2952c4; color: #7aabff; }
+    .video-card { background: #1e1c1a; border-color: #2e2c28; color: #e8e6e0; }
+    .video-card:hover { background: #1a2030; border-color: #2952c4; }
+    .video-thumb { background: #1a2a4a; }
+    .video-title { color: #e8e6e0; }
+    .reset-btn { background: transparent; border-color: #333; color: #888; }
+    .reset-btn:hover { background: #2a2a28; }
+    .arrow-icon { stroke: #444; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>🧘 Ma bibliothèque yoga</h1>
+    <p id="subtitle">139 vidéos · touchez pour ouvrir dans YouTube</p>
+  </div>
+
+  <div class="section-label">Catégorie</div>
+  <div class="cats" id="cats"></div>
+
+  <div class="section-label">Durée max</div>
+  <div class="duration-row">
+    <label>jusqu'à</label>
+    <input type="range" id="dur" min="5" max="30" step="5" value="30">
+    <span class="val" id="dur-val">toutes</span>
+  </div>
+
+  <div class="results-header">
+    <span class="count" id="count"></span>
+    <button class="reset-btn" onclick="reset()">Réinitialiser</button>
+  </div>
+
+  <div class="video-list" id="list"></div>
+</div>
+
+<script>
+const CAT_NAMES = {
+  1: "Yoga du soir / doux",
+  2: "Yin yoga",
+  3: "Étirements",
+  4: "Dos",
+  5: "Articulations",
+  6: "Respiration",
+  7: "Yoga nidra",
+  8: "Autres"
+};
+
+const VIDEOS = [
+  {t:"Se sentir bien - Yoga flow pour la souplesse & mobilité des hanches",u:"https://www.youtube.com/watch?v=yM8wLu0vBpQ",d:24.8,c:[8]},
+  {t:"YOGA HANCHES : 18min pour libérer tes hanches en douceur 🌿",u:"https://www.youtube.com/watch?v=42R4GjFGRjo",d:18.2,c:[5]},
+  {t:"YOGA DU SOIR ‐ 10min pour se détendre et relâcher les tensions",u:"https://www.youtube.com/watch?v=opj9WSouTK8",d:11.3,c:[1]},
+  {t:"YOGA CONTRE LE MAL DE DOS - 15min pour soulager, étirer et assouplir la colonne vertébrale",u:"https://www.youtube.com/watch?v=GmxkZQKG1V8",d:14.2,c:[4]},
+  {t:"Ouvrir les HANCHES - routine de yoga en 15 min",u:"https://www.youtube.com/watch?v=oF-3HS1Yj8w",d:14.4,c:[5]},
+  {t:"Yoga du soir - routine douce pour se détendre totalement - 20min",u:"https://www.youtube.com/watch?v=0vrk02vMm-M",d:21.4,c:[1]},
+  {t:"Yoga doux - 20min anti mal de dos",u:"https://www.youtube.com/watch?v=A1k-IkoI4YQ",d:23.1,c:[1,4]},
+  {t:"YOGA DU SOIR - routine douce pour se détendre",u:"https://www.youtube.com/watch?v=QYtzWYkT-iM",d:15.6,c:[1]},
+  {t:"Mobilité articulaire : 15 minutes pour assouplir le cou, les épaules et les hanches",u:"https://www.youtube.com/watch?v=tYXc1NDO-fc",d:19.9,c:[5]},
+  {t:"Yoga dos : 10 minutes pour soulager les douleurs et renforcer le dos",u:"https://www.youtube.com/watch?v=yIhaK-PvSxI",d:11.2,c:[4]},
+  {t:"Yoga du soir : 15 minutes pour relâcher les tensions et s'endormir facilement",u:"https://www.youtube.com/watch?v=aMNg2J7-mn8",d:15.7,c:[1]},
+  {t:"Yoga restauratif: 20 minutes pour calmer le mental et relâcher le stress",u:"https://www.youtube.com/watch?v=vBbDycECgLE",d:18.0,c:[1]},
+  {t:"Yoga doux : 5 minutes pour récupérer quand tu es épuisé(e)",u:"https://www.youtube.com/watch?v=WLYkYJB64GQ",d:4.8,c:[1]},
+  {t:"Stressée ? Retrouve la sérénité en 5 minutes",u:"https://www.youtube.com/watch?v=Vp_rW6PbiRw",d:4.6,c:[1]},
+  {t:"Nuque et cervicales tendues ? 3 minutes pour tout relâcher",u:"https://www.youtube.com/watch?v=oowesbh8cQ8",d:4.3,c:[5]},
+  {t:"Yoga sur chaise pour soulager le dos 10 minutes seulement",u:"https://www.youtube.com/watch?v=-Ayxm_QRg60",d:12.7,c:[4]},
+  {t:"Yoga Flow Lunaire | Libère tes hanches et soulage le bas du dos",u:"https://www.youtube.com/watch?v=Bh6qDkCbmYU",d:20.2,c:[1,5]},
+  {t:"Routine douce pour ouvrir les Hanches et libérer le bassin | Accessible à tous",u:"https://www.youtube.com/watch?v=J9GV3G47QLo",d:21.8,c:[5]},
+  {t:"Hanches ouvertes | Routine slow flow, douce, accessible et dynamique",u:"https://www.youtube.com/watch?v=uggRoQu0fvU",d:21.9,c:[5]},
+  {t:"10 Min Easy Yoga | Stretching Doux pour corps Fatigués et Raides",u:"https://www.youtube.com/watch?v=P-Euy6ZmbcU",d:13.5,c:[3]},
+  {t:"Yoga Anti Stress 20 Minutes | Détente et Relaxation après le Travail",u:"https://www.youtube.com/watch?v=nB_EXDFQ3ec",d:21.4,c:[1]},
+  {t:"10 minutes pour Prendre soin de Soi | Yoga doux et Relaxation",u:"https://www.youtube.com/watch?v=t5ZxGv11Mo8",d:13.2,c:[1]},
+  {t:"10 min de Yoga pour les HYPERSENSIBLES | Calme, douceur et Ancrage",u:"https://www.youtube.com/watch?v=cYKI4RZe6f0",d:11.2,c:[1]},
+  {t:"10 minutes de Yoga qui CHANGENT tout | Yoga pour se sentir bien!",u:"https://www.youtube.com/watch?v=XJBKoalddWs",d:11.2,c:[1]},
+  {t:"10 Minutes de Yoga pour Se Recentrer | Revenir au Calme Intérieur",u:"https://www.youtube.com/watch?v=SjxC4VYxE_U",d:12.9,c:[1]},
+  {t:"15 Minutes de Yoga Thérapie pour le Mal de Dos | Soulagement en Douceur",u:"https://www.youtube.com/watch?v=18O7gFMPQPI",d:16.9,c:[4]},
+  {t:"10 Minutes de Yoga Express Anti Stress | Respire & Relâche",u:"https://www.youtube.com/watch?v=19CeS6SHRjQ",d:12.1,c:[1]},
+  {t:"15 Minutes de Flow Yoga & Étirements Doux | Débutants Bienvenus !",u:"https://www.youtube.com/watch?v=skHRfJE8MMM",d:17.4,c:[3]},
+  {t:"YIN FLOW │ Soulage les tensions du COU & du HAUT DU DOS │ 10 MIN de pure détente",u:"https://www.youtube.com/watch?v=ht0ekx3bkgc",d:12.6,c:[2]},
+  {t:"YIN YOGA DU SOIR │ Libère les tensions en 20 minutes │ Spécial détente profonde",u:"https://www.youtube.com/watch?v=EOK8bIfS0r4",d:21.2,c:[2]},
+  {t:"STRETCH & RESET – 10 MIN pour relâcher les tensions et repartir à zéro",u:"https://www.youtube.com/watch?v=V-OEmKpbhkU",d:13.1,c:[3]},
+  {t:"20 MIN de YOGA DU SOIR pour ÉVACUER le stress & S'APAISER",u:"https://www.youtube.com/watch?v=5CU8WzK5EDU",d:20.8,c:[1]},
+  {t:"Détox douce | Yoga pour la Digestion, les Ballonnements, la constipation",u:"https://www.youtube.com/watch?v=jQ-UFOojWG8",d:16.5,c:[8]},
+  {t:"Soulager le dos | Yoga doux pour dénouer les tensions",u:"https://www.youtube.com/watch?v=gqekTcgTndU",d:20.9,c:[4]},
+  {t:"Respiration et Méditation | Pranayamas | Anti Stress & Anxiété",u:"https://www.youtube.com/watch?v=gYQkZEaADDY",d:16.8,c:[6]},
+  {t:"Yoga et mouvement doux pour personnes assises toute la journée",u:"https://www.youtube.com/watch?v=yXyfN1jM6v8",d:22.0,c:[3]},
+  {t:"Stretchs et étirements profonds | Yoga pour tous",u:"https://www.youtube.com/watch?v=Z9zBcIkp8VM",d:22.8,c:[3]},
+  {t:"10-Minute easy Yoga to Release Stress | Routine for beginners",u:"https://www.youtube.com/watch?v=cmJ2fc0aOxo",d:13.2,c:[1]},
+  {t:"10 Minute to Reduce neck and upper back Pain | Réduire les douleurs dans la Nuque",u:"https://www.youtube.com/watch?v=dcwTI9pQOWY",d:12.2,c:[4,5]},
+  {t:"10 Minute to Reduce Hip pain and improve Mobility",u:"https://www.youtube.com/watch?v=QfnVZHSXokY",d:11.2,c:[5]},
+  {t:"Reduce back pain in 10 minutes | Soulage le Bas du Dos en 10 minutes",u:"https://www.youtube.com/watch?v=Jf6pq7d4Gjw",d:14.3,c:[4]},
+  {t:"Mobilité et Souplesse | Routine de Yoga doux de 10 minutes",u:"https://www.youtube.com/watch?v=sRSzUjxoYc4",d:11.3,c:[3]},
+  {t:"Stretch for Lower Back and Tight Hips | 10 Minute Routine",u:"https://www.youtube.com/watch?v=0PyEEF-D4Zs",d:12.3,c:[3,5]},
+  {t:"Yoga pour le Nerf Vague : Active ton Calme Intérieur et Relâche les Tensions",u:"https://www.youtube.com/watch?v=PDNVhOPwY0U",d:22.7,c:[8]},
+  {t:"15 minutes de yoga pour dormir profondément | Séance du soir ultra relaxante",u:"https://www.youtube.com/watch?v=hATzKoaZcvM",d:18.2,c:[1]},
+  {t:"Back Pain Relief Stretches | 10 min. Yoga for Relaxation & Recovery",u:"https://www.youtube.com/watch?v=kDowyGvMpX4",d:11.2,c:[4]},
+  {t:"Yoga Doux sur le dos | 10 min d'étirements pour apaiser les douleurs de hanches",u:"https://www.youtube.com/watch?v=tbixPC0FIiM",d:10.9,c:[5]},
+  {t:"Yoga pour couper avec la charge mentale | 15 min pour souffler et relâcher",u:"https://www.youtube.com/watch?v=CmkI9uOz_ZI",d:16.8,c:[1]},
+  {t:"10 minutes de Yoga pour Soulager le bas du Dos | Relaxation et Récupération",u:"https://www.youtube.com/watch?v=TglmQ2R5aoc",d:11.6,c:[4]},
+  {t:"Active le système nerveux parasympathique et calme ton stress",u:"https://www.youtube.com/watch?v=5tE3MD19DFU",d:22.1,c:[8]},
+  {t:"15 minutes for Fascia Release | 15 minutes pour étirer les Fascias (Yin Yoga)",u:"https://www.youtube.com/watch?v=Sh2nQH9nV3Q",d:16.4,c:[2]},
+  {t:"Étirements doux de Yin Yoga pour assouplir les fascias et relâcher les tensions",u:"https://www.youtube.com/watch?v=oGGnUE8HwC8",d:21.6,c:[2]},
+  {t:"Assouplir le cou, les épaules et les hanches : exercices pour une meilleure mobilité",u:"https://www.youtube.com/watch?v=BUPRhdRVynU",d:19.9,c:[5]},
+  {t:"10 minutes Evening Stretch for beginners | 10 min d'étirements pour le soir",u:"https://www.youtube.com/watch?v=u_fetiy3OSc",d:12.7,c:[3]},
+  {t:"Séance de Yoga pour soulager les douleurs lombaires et améliorer la posture",u:"https://www.youtube.com/watch?v=0Amq1Uic_Sc",d:22.2,c:[4]},
+  {t:"Yoga doux : 10 minutes pour détendre le corps et l'esprit",u:"https://www.youtube.com/watch?v=5UlRc2FZHiQ",d:12.4,c:[1]},
+  {t:"Yoga sur chaise : séance de 10 minutes pour améliorer la posture et la flexibilité",u:"https://www.youtube.com/watch?v=utueM6G2j5k",d:10.9,c:[5]},
+  {t:"Séance de Yoga pour améliorer la flexibilité et la mobilité",u:"https://www.youtube.com/watch?v=quEOKJo6mHE",d:21.9,c:[3]},
+  {t:"Sommeil difficile ? 10 minutes de yoga et respiration pour bien dormir",u:"https://www.youtube.com/watch?v=r1mAVyfSHv8",d:11.5,c:[6]},
+  {t:"Yoga sur chaise : soulager les douleurs lombaires",u:"https://www.youtube.com/watch?v=WO7nvHBJAiA",d:11.8,c:[4]},
+  {t:"Séance de Yoga douce pour libérer le bassin et le dos",u:"https://www.youtube.com/watch?v=_d3VtfII9EA",d:22.8,c:[5,4]},
+  {t:"10 minutes neck and back release (music only)",u:"https://www.youtube.com/watch?v=-N-wgj8yasg",d:10.9,c:[3,5]},
+  {t:"10 minutes pour stimuler le système lymphatique",u:"https://www.youtube.com/watch?v=dEl1gnggGTY",d:10.1,c:[8]},
+  {t:"Relaxation courte et complète (yoga très doux et méditation)",u:"https://www.youtube.com/watch?v=KofpXOmNL1s",d:10.6,c:[1]},
+  {t:"Yoga sur chaise : 10 min d'étirements pour relâcher les tensions du dos, des épaules",u:"https://www.youtube.com/watch?v=zosYitpDjoI",d:11.3,c:[5,4]},
+  {t:"Yoga pour le drainage lymphatique",u:"https://www.youtube.com/watch?v=bp_Rw30dlcs",d:19.3,c:[8]},
+  {t:"Yoga pour soulager le mal de dos | 15 minutes pour assouplir la colonne vertébrale",u:"https://www.youtube.com/watch?v=OzWdO39HNxA",d:17.9,c:[4]},
+  {t:"Yoga sur chaise pour Soulager les Douleurs Articulaires : 20 Minutes",u:"https://www.youtube.com/watch?v=YJxjm09yGDU",d:22.8,c:[5]},
+  {t:"Yoga doux Anti Stress : 10 minutes ultra simples pour débutants",u:"https://www.youtube.com/watch?v=5t67dS_3ct4",d:11.2,c:[1]},
+  {t:"Yoga express débutant : 10 minutes pour s'apaiser et détendre corps & esprit",u:"https://www.youtube.com/watch?v=aeC71Z1kKe4",d:12.9,c:[1]},
+  {t:"Yoga doux Anti Stress : 10 minutes pour relâcher la pression",u:"https://www.youtube.com/watch?v=R7wsbmR2Oho",d:11.9,c:[1]},
+  {t:"Yoga Relaxation Profonde : Plonge dans le calme intérieur",u:"https://www.youtube.com/watch?v=1MZ2t3Asemg",d:22.4,c:[1]},
+  {t:"Yoga Détox : Libère les tensions et recharge ton énergie",u:"https://www.youtube.com/watch?v=hGNiZCg7kV8",d:21.9,c:[8]},
+  {t:"5 étirements pour soulager les douleurs de hanches et améliorer ta mobilité",u:"https://www.youtube.com/watch?v=CNrgoaVmSaE",d:11.6,c:[5]},
+  {t:"Flow de yoga doux pour les soirées d'hiver: étirements et apaisement",u:"https://www.youtube.com/watch?v=6ya8pdeI9F4",d:20.4,c:[1]},
+  {t:"15 minutes de yoga du soir pour relâcher les tensions de la journée",u:"https://www.youtube.com/watch?v=UercpW6UNfY",d:15.7,c:[1]},
+  {t:"Le cours de yoga parfait pour réduire le stress et l'anxiété en 10 minutes",u:"https://www.youtube.com/watch?v=Ecq4xvL1c5c",d:11.7,c:[1]},
+  {t:"Soulager la nuque, les épaules et le haut du dos en 10 minutes de yoga",u:"https://www.youtube.com/watch?v=iweEMM9qOGU",d:10.7,c:[4,5]},
+  {t:"Télétravail ? 15 minutes de yoga pour relâcher épaules et bassin",u:"https://www.youtube.com/watch?v=sY9HFt8GQ_c",d:15.3,c:[3,5]},
+  {t:"Yoga des yeux : 10 minutes pour reposer ses yeux des écrans",u:"https://www.youtube.com/watch?v=FkcPe_BsX70",d:8.8,c:[8]},
+  {t:"Yoga détente en fin de journée : étirements simples pour les jambes, hanches et dos",u:"https://www.youtube.com/watch?v=m5jIWCiAlfM",d:22.4,c:[3,5]},
+  {t:"Pratique 0: Libérer et détendre le bas du corps, les jambes et les hanches",u:"https://www.youtube.com/watch?v=_cSv_57kCU0",d:22.3,c:[3,5]},
+  {t:"Libérer les hanches en profondeur en seulement 15 minutes",u:"https://www.youtube.com/watch?v=BjoBjNiefcc",d:18.0,c:[5]},
+  {t:"Cours de yoga débutant tout doux anti stress de 20 minutes",u:"https://www.youtube.com/watch?v=6Hw3572eVzM",d:20.3,c:[1]},
+  {t:"Étirer et relâcher en douceur : 20 minutes de Yin Yoga pour le corps et l'âme",u:"https://www.youtube.com/watch?v=2jj9xdVM9bY",d:21.0,c:[2]},
+  {t:"Yoga doux pour se relaxer et retrouver énergie et motivation en 20 minutes",u:"https://www.youtube.com/watch?v=jpLHBZIvJ8o",d:20.9,c:[1]},
+  {t:"Étire toi avec cette routine de Yoga sur chaise simple de 15 minutes pour débutants",u:"https://www.youtube.com/watch?v=1I6bqvlTmgU",d:17.1,c:[3]},
+  {t:"Mobilise tes hanches et libère le bas du dos",u:"https://www.youtube.com/watch?v=Axpn85IImCE",d:7.4,c:[5]},
+  {t:"Étirements et exercices pour libérer et renforcer les épaules, la nuque et le dos",u:"https://www.youtube.com/watch?v=pY1rY5ugMUQ",d:18.6,c:[3,5]},
+  {t:"Soulage tes cervicales et le haut de ton dos avec cette routine de 5 minutes",u:"https://www.youtube.com/watch?v=fZCUYYW3W8c",d:6.3,c:[4,5]},
+  {t:"Respire et étire ton corps avec cette routine de Yoga sur chaise (55+)",u:"https://www.youtube.com/watch?v=kqJwRGp_LPE",d:22.2,c:[3]},
+  {t:"Routine yoga quotidienne : étirements et détente du corps en 20 minutes",u:"https://www.youtube.com/watch?v=T0Pfskr7nUM",d:21.1,c:[3]},
+  {t:"Routine yoga facile pour soulager les tensions du bas du dos en 5 minutes",u:"https://www.youtube.com/watch?v=ZI_ow7fiXBI",d:8.0,c:[4]},
+  {t:"Routine de Yoga ultra efficace pour combattre le stress en 15 minutes",u:"https://www.youtube.com/watch?v=kyyVPp3iNEs",d:16.4,c:[1]},
+  {t:"Yin Yoga pour débutants : calme ton esprit en 20 minutes",u:"https://www.youtube.com/watch?v=cTn2CCzBmq0",d:23.6,c:[2]},
+  {t:"La routine parfaite pour des hanches plus souples et un dos détendu",u:"https://www.youtube.com/watch?v=dFlefur-CQU",d:21.0,c:[5,4]},
+  {t:"Libère tes hanches avec ce flow incroyable en 15 minutes",u:"https://www.youtube.com/watch?v=Qxj_6Ug589A",d:17.4,c:[5]},
+  {t:"5 minutes de respiration à faire tous les jours pour être plus calme",u:"https://www.youtube.com/watch?v=cf1nGwbzT4s",d:8.0,c:[6]},
+  {t:"10 minutes pour déstresser avec la cohérence cardiaque",u:"https://www.youtube.com/watch?v=gaOAZkuBVYc",d:12.1,c:[6]},
+  {t:"La routine parfaite de Yoga pour soulager le mal de dos en douceur (Hatha Yoga)",u:"https://www.youtube.com/watch?v=9ztSoC8_D18",d:25.8,c:[4]},
+  {t:"Réduire le stress et s'étirer: routine de Yoga doux de 15 minutes",u:"https://www.youtube.com/watch?v=sd49ER2kF2M",d:15.4,c:[3]},
+  {t:"10 minutes de yoga doux pour une nuit paisible",u:"https://www.youtube.com/watch?v=PbccCKw-uq4",d:13.4,c:[1]},
+  {t:"Réveil complet du dos : routine de Yoga de 15 minutes pour relâcher les tensions",u:"https://www.youtube.com/watch?v=9rK0Q5JnV2E",d:17.3,c:[4]},
+  {t:"Yoga du nerf vague: gérer le stress, l'anxiété et les douleurs chroniques",u:"https://www.youtube.com/watch?v=ZU8PyA0y1PA",d:17.9,c:[8]},
+  {t:"Yoga douceur: 10 minutes pour débutants",u:"https://www.youtube.com/watch?v=8bfMg7_5rvk",d:12.5,c:[1]},
+  {t:"Bed Yoga: Routine du soir pour une douce nuit (20 minutes)",u:"https://www.youtube.com/watch?v=JSxdXR1Ny7Q",d:23.4,c:[1]},
+  {t:"Soulager la nuque et les cervicales en moins de 10 minutes",u:"https://www.youtube.com/watch?v=7czZo4HxNpU",d:9.2,c:[4,5]},
+  {t:"Routine Yoga de fin de journée pour mieux dormir (tous niveaux)",u:"https://www.youtube.com/watch?v=1LkhmL6-AT0",d:21.8,c:[1]},
+  {t:"Yoga restauratif anti fatigue: reset profond (avec fond musical)",u:"https://www.youtube.com/watch?v=W-mdrjqHbZM",d:24.9,c:[1]},
+  {t:"15 minutes de Yoga doux pour le bien être (tous niveaux)",u:"https://www.youtube.com/watch?v=k7V7Ua2HjEw",d:18.4,c:[1]},
+  {t:"Routine du soir : 15 minutes de Yoga",u:"https://www.youtube.com/watch?v=3UAFWbIbf9A",d:16.3,c:[1]},
+  {t:"15 minutes pour étirer le bas du dos et soulager les douleurs sacrum / coccyx",u:"https://www.youtube.com/watch?v=1XkXMoNc8rs",d:17.6,c:[4]},
+  {t:"Yoga du soir: Routine de 15 minutes pour étirer les tensions et revenir au calme",u:"https://www.youtube.com/watch?v=MKiApcnOt6U",d:17.6,c:[1]},
+  {t:"20 minutes contre la migraine et les maux de tête (tous niveaux)",u:"https://www.youtube.com/watch?v=jMvwDWBadUU",d:23.5,c:[8]},
+  {t:"15 minutes de Yoga pour s'étirer (tous niveaux)",u:"https://www.youtube.com/watch?v=9OI_N-RAnmo",d:18.1,c:[3]},
+  {t:"20 minutes de yoga du soir | Routine quotidienne pour se détendre (Hatha Yoga)",u:"https://www.youtube.com/watch?v=2GSkosszLXM",d:23.4,c:[1]},
+  {t:"20 minutes d'étirements pour gagner en flexibilité, mobilité et souplesse",u:"https://www.youtube.com/watch?v=KhfGWz-7vU8",d:20.3,c:[3]},
+  {t:"20 minutes de Yoga pour se sentir bien (Yoga doux | niveau débutant)",u:"https://www.youtube.com/watch?v=DHn_g_caVU0",d:22.3,c:[1]},
+  {t:"Pranayama pour calmer l'anxiété (niveau débutant)",u:"https://www.youtube.com/watch?v=7AP98rwF5qs",d:19.5,c:[6]},
+  {t:"5 postures de Yoga pour soulager le mal de dos (Yoga thérapie)",u:"https://www.youtube.com/watch?v=md6Ky5gC9vE",d:10.8,c:[4]},
+  {t:"10 minutes anti mal de dos (Yoga du matin | niveau débutant)",u:"https://www.youtube.com/watch?v=wUk_WeFH88E",d:12.9,c:[4]},
+  {t:"Yoga Nidra: Reset au son des bols tibétains (tous niveaux)",u:"https://www.youtube.com/watch?v=DhysTQfHqME",d:19.0,c:[7]},
+  {t:"Stress, surmenage, fatigue ? - Yoga détente (niveau débutant)",u:"https://www.youtube.com/watch?v=s7C8eOcEr-0",d:24.3,c:[1]},
+  {t:"5 minutes d'étirements pour soulager la nuque et les cervicales (Yoga thérapie)",u:"https://www.youtube.com/watch?v=u9JpPQi55ls",d:8.4,c:[4,5]},
+  {t:"Routine du soir: 15 minutes pour soulager le bas du dos (tous niveaux)",u:"https://www.youtube.com/watch?v=pH8JqSJMU6w",d:16.8,c:[4]},
+  {t:"Relaxation: respiration complète (tous niveaux)",u:"https://www.youtube.com/watch?v=er67koPmHV4",d:8.7,c:[6]},
+  {t:"Yoga thérapie: Nuque, cervicales et haut du dos (niveau débutant)",u:"https://www.youtube.com/watch?v=3MZ_unGRLDc",d:13.2,c:[4,5]},
+  {t:"Yoga du soir: Routine anti mal de dos (tous niveaux)",u:"https://www.youtube.com/watch?v=7xXMHvfom_o",d:14.6,c:[1,4]},
+  {t:"Yoga thérapie: Assouplir son dos (tous niveaux)",u:"https://www.youtube.com/watch?v=mAopFVzFmUk",d:15.8,c:[4]},
+  {t:"Yoga doux: lutter contre l'anxiété (niveau débutant)",u:"https://www.youtube.com/watch?v=EwJkOiZca1Y",d:17.9,c:[1]},
+  {t:"Yoga thérapie: calmer son stress en 10 minutes (tous niveaux)",u:"https://www.youtube.com/watch?v=0tcvT1vknHE",d:9.2,c:[1]},
+  {t:"Méditation: recentrage et bain sonore",u:"https://www.youtube.com/watch?v=tLS-qsfikJI",d:10.8,c:[8]},
+  {t:"Yoga du soir: Routine Yoga au lit (tous niveaux)",u:"https://www.youtube.com/watch?v=-wadWz3I-ts",d:11.7,c:[1]},
+  {t:"Yoga doux: Routine du matin ou du soir (tous niveaux)",u:"https://www.youtube.com/watch?v=N_yEnOU5xKQ",d:13.4,c:[1]},
+  {t:"Yoga du soir: 15 minutes de Yoga au lit (tous niveaux)",u:"https://www.youtube.com/watch?v=dztJYC_0mYQ",d:14.8,c:[1]},
+  {t:"Yoga du soir: 15 minutes avant de dormir (tous niveaux)",u:"https://www.youtube.com/watch?v=ybnIfnx7O_M",d:16.2,c:[1]},
+  {t:"20 minutes de Yoga Nidra pour lâcher prise (niveau débutant)",u:"https://www.youtube.com/watch?v=l5fZttocKCU",d:19.0,c:[7]},
+  {t:"15 minutes de méditation pour (re)trouver le calme",u:"https://www.youtube.com/watch?v=OxsaL-ioyX8",d:16.8,c:[8]}
+];
+
+let activeCat = null;
+let maxDur = 30;
+
+function formatDur(v) { return v >= 30 ? "toutes" : "≤ " + v + " min"; }
+
+function render() {
+  const seen = new Set();
+  const filtered = VIDEOS.filter(v => {
+    if (seen.has(v.u)) return false;
+    seen.add(v.u);
+    if (activeCat !== null && !v.c.includes(activeCat)) return false;
+    if (maxDur < 30 && v.d > maxDur) return false;
+    return true;
+  });
+
+  document.getElementById('count').textContent =
+    filtered.length + ' vidéo' + (filtered.length !== 1 ? 's' : '');
+
+  const list = document.getElementById('list');
+  if (!filtered.length) {
+    list.innerHTML = '<div class="empty">Aucune vidéo pour ces filtres.</div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(v => {
+    const videoId = (v.u.match(/[?&]v=([^&]+)/) || [])[1] || '';
+    const thumb = videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : '';
+    return `
+    <a class="video-card" href="${v.u}" target="_blank">
+      <img class="video-thumb" src="${thumb}" alt="" loading="lazy">
+      <div class="video-info">
+        <div class="video-title">${v.t}</div>
+        <div class="video-meta">${Math.round(v.d)} min · ${v.c.map(id => CAT_NAMES[id]).join(' · ')}</div>
+      </div>
+      <svg class="arrow-icon" viewBox="0 0 16 16" fill="none" stroke-width="1.5">
+        <path d="M3 8h10M9 4l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+  `}).join('');
+}
+
+function buildCats() {
+  const container = document.getElementById('cats');
+  const all = document.createElement('button');
+  all.className = 'cat-btn active';
+  all.textContent = 'Toutes';
+  all.onclick = () => { activeCat = null; updateCats(); render(); };
+  container.appendChild(all);
+
+  Object.entries(CAT_NAMES).forEach(([id, name]) => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-btn';
+    btn.textContent = name;
+    btn.dataset.cat = id;
+    btn.onclick = () => { activeCat = parseInt(id); updateCats(); render(); };
+    container.appendChild(btn);
+  });
+}
+
+function updateCats() {
+  document.querySelectorAll('.cat-btn').forEach(b => {
+    const id = b.dataset.cat ? parseInt(b.dataset.cat) : null;
+    b.classList.toggle('active', id === activeCat);
+  });
+}
+
+function reset() {
+  activeCat = null; maxDur = 30;
+  document.getElementById('dur').value = 30;
+  document.getElementById('dur-val').textContent = 'toutes';
+  updateCats(); render();
+}
+
+document.getElementById('dur').addEventListener('input', function() {
+  maxDur = parseInt(this.value);
+  document.getElementById('dur-val').textContent = formatDur(maxDur);
+  render();
+});
+
+buildCats();
+render();
+</script>
+</body>
+</html>
