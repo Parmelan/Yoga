@@ -341,7 +341,7 @@
         <button class="panel-close" onclick="closeAdmin()">✕</button>
       </div>
       <div class="auth-screen">
-        <p>- Entre ton token GitHub pour modifier la bibliothèque. Les changements seront committés directement dans ton repo et visibles en ~30 secondes.</p>
+        <p>Entre ton token GitHub pour modifier la bibliothèque. Les changements seront committés directement dans ton repo et visibles en ~30 secondes.</p>
 
         <div class="field-group">
           <label>Token GitHub (Personal Access Token)</label>
@@ -774,7 +774,7 @@ async function connectGitHub() {
 
   try {
     const fetchRes = await fetch(url, {
-      headers: { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json' }
+      headers: { Authorization: 'token ' + token, Accept: 'application/vnd.github+json' }
     });
     const data = await fetchRes.json();
 
@@ -817,7 +817,7 @@ function disconnectGitHub() {
 async function githubGetFile(token, repo, path, branch) {
   const url = `https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`;
   const res = await fetch(url, {
-    headers: { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json' }
+    headers: { Authorization: 'token ' + token, Accept: 'application/vnd.github+json' }
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -832,7 +832,7 @@ async function githubPutFile(content, message) {
   const res = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
     method: 'PUT',
     headers: {
-      Authorization: 'Bearer ' + token,
+      Authorization: 'token ' + token,
       Accept: 'application/vnd.github+json',
       'Content-Type': 'application/json'
     },
