@@ -15,9 +15,15 @@
   }
   .app { max-width: 480px; margin: 0 auto; }
 
-  .header { margin-bottom: 1.5rem; }
-  .header h1 { font-size: 22px; font-weight: 600; color: #1a1a18; }
-  .header p { font-size: 13px; color: #888; margin-top: 3px; }
+  .header { margin-bottom: 1.5rem; display: flex; align-items: flex-start; justify-content: space-between; }
+  .header-text h1 { font-size: 22px; font-weight: 600; color: #1a1a18; }
+  .header-text p { font-size: 13px; color: #888; margin-top: 3px; }
+  .admin-toggle {
+    background: none; border: none; cursor: pointer;
+    font-size: 18px; padding: 4px; opacity: 0.35;
+    transition: opacity 0.15s; line-height: 1;
+  }
+  .admin-toggle:hover { opacity: 0.7; }
 
   .section-label {
     font-size: 11px; font-weight: 600; color: #aaa;
@@ -43,13 +49,13 @@
     display: flex; align-items: center; gap: 10px;
     margin-bottom: 1.5rem;
   }
-  .duration-row label { font-size: 13px; color: #ffffff; white-space: nowrap; }
+  .duration-row label { font-size: 13px; color: #666; white-space: nowrap; }
   .duration-row input[type=range] {
     flex: 1; height: 4px; cursor: pointer;
     accent-color: #2952c4;
   }
   .duration-row .val {
-    font-size: 13px; font-weight: 600; color: #ccc;
+    font-size: 13px; font-weight: 600; color: #1a1a18;
     min-width: 65px; text-align: right;
   }
 
@@ -74,16 +80,20 @@
     display: flex; align-items: center; gap: 12px;
     text-decoration: none; color: inherit;
     transition: border-color 0.12s, background 0.12s;
+    position: relative;
   }
-  .video-card:hover {
-    border-color: #a8bffd; background: #f0f4ff;
-  }
+  .video-card:hover { border-color: #a8bffd; background: #f0f4ff; }
   .video-card:active { transform: scale(0.99); }
 
   .video-thumb {
     width: 120px; height: 68px; border-radius: 8px;
     object-fit: cover; flex-shrink: 0;
     background: #e8f0fe;
+  }
+  .video-thumb.spotify-thumb {
+    background: #1DB954;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
   }
 
   .video-info { flex: 1; min-width: 0; }
@@ -97,14 +107,168 @@
 
   .arrow-icon { width: 14px; height: 14px; stroke: #bbb; flex-shrink: 0; }
 
+  /* Admin edit button on cards */
+  .card-edit-btn {
+    display: none;
+    position: absolute; top: 8px; right: 8px;
+    background: #fff; border: 1px solid #d8d6d0;
+    border-radius: 6px; padding: 3px 7px;
+    font-size: 11px; color: #666; cursor: pointer;
+    font-family: inherit; z-index: 2;
+  }
+  .admin-mode .card-edit-btn { display: block; }
+  .admin-mode .video-card { padding-right: 52px; }
+
   .empty {
     text-align: center; padding: 2.5rem 1rem;
     color: #aaa; font-size: 14px;
   }
 
+  /* ===== ADMIN PANEL ===== */
+  .admin-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 100;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .admin-overlay.open { display: flex; }
+
+  .admin-panel {
+    background: #fff;
+    border-radius: 20px 20px 0 0;
+    padding: 0;
+    width: 100%; max-width: 520px;
+    max-height: 92vh;
+    overflow-y: auto;
+    box-shadow: 0 -4px 30px rgba(0,0,0,0.15);
+    animation: slideUp 0.22s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(40px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+
+  .panel-drag { width: 36px; height: 4px; background: #d8d6d0; border-radius: 2px; margin: 12px auto 0; }
+
+  .panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid #f0ede8;
+  }
+  .panel-header h2 { font-size: 16px; font-weight: 600; }
+  .panel-close {
+    background: none; border: none; cursor: pointer;
+    font-size: 20px; color: #aaa; line-height: 1; padding: 2px;
+  }
+
+  /* Auth screen */
+  .auth-screen, .main-screen { padding: 20px; }
+  .auth-screen p { font-size: 13px; color: #666; margin-bottom: 14px; line-height: 1.5; }
+  .auth-screen a { color: #2952c4; }
+
+  .field-group { margin-bottom: 14px; }
+  .field-group label { display: block; font-size: 12px; font-weight: 600; color: #666; margin-bottom: 5px; }
+  .field-group input, .field-group select, .field-group textarea {
+    width: 100%; padding: 9px 11px;
+    border: 1px solid #d8d6d0; border-radius: 8px;
+    font-size: 13px; font-family: inherit;
+    background: #faf9f6; color: #1a1a18;
+    outline: none; transition: border-color 0.12s;
+  }
+  .field-group input:focus, .field-group select:focus, .field-group textarea:focus {
+    border-color: #a8bffd; background: #fff;
+  }
+  .field-group textarea { resize: vertical; min-height: 60px; }
+  .field-group input[type=password] { letter-spacing: 0.1em; }
+
+  .cat-checkboxes {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .cat-check {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 12px; color: #555;
+    background: #f5f4f0; border: 1px solid #d8d6d0;
+    border-radius: 16px; padding: 4px 10px;
+    cursor: pointer; transition: all 0.1s; user-select: none;
+  }
+  .cat-check input { display: none; }
+  .cat-check.checked {
+    background: #e8f0fe; border-color: #a8bffd; color: #2952c4; font-weight: 600;
+  }
+
+  .btn-primary {
+    width: 100%; padding: 11px;
+    background: #2952c4; color: #fff;
+    border: none; border-radius: 10px;
+    font-size: 14px; font-weight: 600; font-family: inherit;
+    cursor: pointer; transition: background 0.12s;
+    margin-top: 4px;
+  }
+  .btn-primary:hover { background: #1e3fa0; }
+  .btn-primary:disabled { background: #9aaddc; cursor: not-allowed; }
+
+  .btn-danger {
+    width: 100%; padding: 10px;
+    background: transparent; color: #e03e3e;
+    border: 1px solid #e03e3e; border-radius: 10px;
+    font-size: 13px; font-weight: 500; font-family: inherit;
+    cursor: pointer; transition: all 0.12s;
+    margin-top: 8px;
+  }
+  .btn-danger:hover { background: #fef2f2; }
+
+  .btn-secondary {
+    width: 100%; padding: 10px;
+    background: transparent; color: #555;
+    border: 1px solid #d8d6d0; border-radius: 10px;
+    font-size: 13px; font-family: inherit;
+    cursor: pointer; transition: all 0.12s;
+    margin-top: 8px;
+  }
+  .btn-secondary:hover { background: #f5f4f0; }
+
+  .status-msg {
+    font-size: 12px; text-align: center;
+    padding: 8px; border-radius: 8px;
+    margin-top: 10px; display: none;
+  }
+  .status-msg.success { background: #e6f4ea; color: #1e7e34; display: block; }
+  .status-msg.error   { background: #fef2f2; color: #c0392b; display: block; }
+  .status-msg.loading { background: #e8f0fe; color: #2952c4; display: block; }
+
+  .github-info {
+    font-size: 11px; color: #aaa; text-align: center;
+    margin-top: 12px; line-height: 1.5;
+  }
+  .github-info a { color: #2952c4; }
+
+  .tabs {
+    display: flex; gap: 0;
+    border-bottom: 1px solid #f0ede8;
+    padding: 0 20px;
+  }
+  .tab {
+    padding: 10px 14px; font-size: 13px; font-weight: 500;
+    color: #aaa; border-bottom: 2px solid transparent;
+    cursor: pointer; transition: all 0.12s; margin-bottom: -1px;
+    background: none; border-left: none; border-right: none; border-top: none;
+    font-family: inherit;
+  }
+  .tab.active { color: #2952c4; border-bottom-color: #2952c4; }
+
+  .tab-panel { display: none; padding: 16px 20px 20px; }
+  .tab-panel.active { display: block; }
+
+  .divider { border: none; border-top: 1px solid #f0ede8; margin: 14px 0; }
+
+  .url-hint { font-size: 11px; color: #aaa; margin-top: 4px; }
+
+  /* Dark mode */
   @media (prefers-color-scheme: dark) {
     body { background: #141412; color: #e8e6e0; }
-    .header h1 { color: #e8e6e0; }
+    .header-text h1 { color: #e8e6e0; }
     .cat-btn { background: #222; border-color: #333; color: #aaa; }
     .cat-btn:hover { background: #2a2a28; border-color: #444; }
     .cat-btn.active { background: #1a2a4a; border-color: #2952c4; color: #7aabff; }
@@ -115,14 +279,36 @@
     .reset-btn { background: transparent; border-color: #333; color: #888; }
     .reset-btn:hover { background: #2a2a28; }
     .arrow-icon { stroke: #444; }
+    .admin-panel { background: #1e1c1a; }
+    .panel-header { border-color: #2e2c28; }
+    .panel-header h2 { color: #e8e6e0; }
+    .tabs { border-color: #2e2c28; }
+    .tab { color: #666; }
+    .tab.active { color: #7aabff; border-bottom-color: #7aabff; }
+    .field-group input, .field-group select, .field-group textarea {
+      background: #141412; border-color: #333; color: #e8e6e0;
+    }
+    .field-group input:focus, .field-group select:focus, .field-group textarea:focus {
+      border-color: #2952c4; background: #1e1c1a;
+    }
+    .cat-check { background: #141412; border-color: #333; color: #aaa; }
+    .cat-check.checked { background: #1a2a4a; border-color: #2952c4; color: #7aabff; }
+    .auth-screen p { color: #888; }
+    .divider { border-color: #2e2c28; }
+    .card-edit-btn { background: #1e1c1a; border-color: #333; color: #aaa; }
+    .btn-secondary { border-color: #333; color: #aaa; }
+    .btn-secondary:hover { background: #2a2a28; }
   }
 </style>
 </head>
 <body>
 <div class="app">
   <div class="header">
-    <h1>🧘 Ma bibliothèque yoga</h1>
-    <p id="subtitle">139 vidéos · touchez pour ouvrir dans YouTube</p>
+    <div class="header-text">
+      <h1>🧘 Ma bibliothèque yoga</h1>
+      <p id="subtitle">chargement…</p>
+    </div>
+    <button class="admin-toggle" id="adminToggle" title="Admin" onclick="openAdmin()">⚙️</button>
   </div>
 
   <div class="section-label">Catégorie</div>
@@ -143,7 +329,144 @@
   <div class="video-list" id="list"></div>
 </div>
 
+<!-- ADMIN OVERLAY -->
+<div class="admin-overlay" id="adminOverlay" onclick="overlayClick(event)">
+  <div class="admin-panel" id="adminPanel">
+    <div class="panel-drag"></div>
+
+    <!-- AUTH SCREEN -->
+    <div id="authScreen">
+      <div class="panel-header">
+        <h2>🔐 Connexion admin</h2>
+        <button class="panel-close" onclick="closeAdmin()">✕</button>
+      </div>
+      <div class="auth-screen">
+        <p>Entre ton token GitHub pour modifier la bibliothèque. Les changements seront committés directement dans ton repo et visibles en ~30 secondes.</p>
+
+        <div class="field-group">
+          <label>Token GitHub (Personal Access Token)</label>
+          <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+        </div>
+        <div class="field-group">
+          <label>Dépôt GitHub (ex: <code>ton-user/ton-repo</code>)</label>
+          <input type="text" id="ghRepo" placeholder="username/repository">
+        </div>
+        <div class="field-group">
+          <label>Chemin du fichier dans le repo</label>
+          <input type="text" id="ghPath" placeholder="index.html">
+        </div>
+        <div class="field-group">
+          <label>Branche</label>
+          <input type="text" id="ghBranch" placeholder="main" value="main">
+        </div>
+
+        <button class="btn-primary" id="connectBtn" onclick="connectGitHub()">Se connecter</button>
+        <div class="status-msg" id="authStatus"></div>
+        <p class="github-info">
+          Crée un token sur <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a><br>
+          (scope <strong>repo</strong> requis). Le token reste en mémoire le temps de la session uniquement.
+        </p>
+      </div>
+    </div>
+
+    <!-- MAIN ADMIN SCREEN -->
+    <div id="mainScreen" style="display:none">
+      <div class="panel-header">
+        <h2>⚙️ Admin</h2>
+        <button class="panel-close" onclick="closeAdmin()">✕</button>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('add')">Ajouter</button>
+        <button class="tab" onclick="switchTab('edit')" id="editTabBtn">Modifier</button>
+        <button class="tab" onclick="switchTab('github')">GitHub</button>
+      </div>
+
+      <!-- TAB: AJOUTER -->
+      <div class="tab-panel active" id="tab-add">
+        <div class="field-group">
+          <label>URL (YouTube ou Spotify)</label>
+          <input type="url" id="newUrl" placeholder="https://www.youtube.com/watch?v=…" oninput="onUrlInput()">
+          <div class="url-hint" id="urlHint"></div>
+        </div>
+        <div class="field-group">
+          <label>Titre</label>
+          <input type="text" id="newTitle" placeholder="Titre de la vidéo ou de l'épisode">
+        </div>
+        <div class="field-group">
+          <label>Durée (minutes)</label>
+          <input type="number" id="newDur" placeholder="ex: 15.5" step="0.1" min="0">
+        </div>
+        <div class="field-group">
+          <label>Catégorie(s)</label>
+          <div class="cat-checkboxes" id="newCats"></div>
+        </div>
+        <button class="btn-primary" id="addBtn" onclick="addEntry()">Ajouter et publier</button>
+        <div class="status-msg" id="addStatus"></div>
+      </div>
+
+      <!-- TAB: MODIFIER -->
+      <div class="tab-panel" id="tab-edit">
+        <p style="font-size:13px;color:#888;margin-bottom:12px">
+          Clique sur <strong>✏️</strong> sur une carte de la liste pour modifier une entrée, ou cherche ici.
+        </p>
+        <div class="field-group">
+          <label>Rechercher</label>
+          <input type="text" id="editSearch" placeholder="Titre ou URL…" oninput="filterEditList()">
+        </div>
+        <div id="editList" style="max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-top:8px"></div>
+      </div>
+
+      <!-- TAB: GITHUB -->
+      <div class="tab-panel" id="tab-github">
+        <p style="font-size:13px;color:#666;margin-bottom:12px;line-height:1.5">
+          Connecté à <strong id="ghRepoDisplay"></strong><br>
+          Fichier : <code id="ghPathDisplay"></code> · Branche : <code id="ghBranchDisplay"></code>
+        </p>
+        <button class="btn-secondary" onclick="disconnectGitHub()">Se déconnecter</button>
+        <hr class="divider">
+        <p style="font-size:12px;color:#aaa;line-height:1.5">
+          Chaque ajout ou modification publie un commit automatique. Les changements sont visibles sur GitHub Pages en ~30 secondes.
+        </p>
+      </div>
+    </div>
+
+    <!-- EDIT ENTRY SCREEN -->
+    <div id="editScreen" style="display:none">
+      <div class="panel-header">
+        <h2>✏️ Modifier l'entrée</h2>
+        <button class="panel-close" onclick="closeEditScreen()">✕</button>
+      </div>
+      <div style="padding:16px 20px 20px">
+        <div class="field-group">
+          <label>URL</label>
+          <input type="url" id="editUrl" readonly style="opacity:0.5">
+        </div>
+        <div class="field-group">
+          <label>Titre</label>
+          <input type="text" id="editTitle">
+        </div>
+        <div class="field-group">
+          <label>Durée (minutes)</label>
+          <input type="number" id="editDur" step="0.1" min="0">
+        </div>
+        <div class="field-group">
+          <label>Catégorie(s)</label>
+          <div class="cat-checkboxes" id="editCats"></div>
+        </div>
+        <button class="btn-primary" id="saveBtn" onclick="saveEdit()">Enregistrer et publier</button>
+        <button class="btn-danger" id="deleteBtn" onclick="deleteEntry()">Supprimer cette entrée</button>
+        <div class="status-msg" id="editStatus"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <script>
+// =============================================
+// DATA
+// =============================================
 const CAT_NAMES = {
   1: "Yoga du soir / doux",
   2: "Yin yoga",
@@ -155,7 +478,7 @@ const CAT_NAMES = {
   8: "Autres"
 };
 
-const VIDEOS = [
+let VIDEOS = [
   {t:"Se sentir bien - Yoga flow pour la souplesse & mobilité des hanches",u:"https://www.youtube.com/watch?v=yM8wLu0vBpQ",d:24.8,c:[8]},
   {t:"YOGA HANCHES : 18min pour libérer tes hanches en douceur 🌿",u:"https://www.youtube.com/watch?v=42R4GjFGRjo",d:18.2,c:[5]},
   {t:"YOGA DU SOIR ‐ 10min pour se détendre et relâcher les tensions",u:"https://www.youtube.com/watch?v=opj9WSouTK8",d:11.3,c:[1]},
@@ -296,14 +619,34 @@ const VIDEOS = [
   {t:"15 minutes de méditation pour (re)trouver le calme",u:"https://www.youtube.com/watch?v=OxsaL-ioyX8",d:16.8,c:[8]}
 ];
 
+// =============================================
+// GITHUB STATE
+// =============================================
+let ghState = { token: null, repo: null, path: null, branch: 'main', sha: null };
+let adminMode = false;
+let editingIndex = null;
+
+// =============================================
+// RENDER LIBRARY
+// =============================================
 let activeCat = null;
 let maxDur = 30;
 
+function isSpotify(url) { return url && url.includes('spotify.com'); }
+
 function formatDur(v) { return v >= 30 ? "toutes" : "≤ " + v + " min"; }
+
+function updateSubtitle() {
+  const total = new Set(VIDEOS.map(v => v.u)).size;
+  const hasSpotify = VIDEOS.some(v => isSpotify(v.u));
+  document.getElementById('subtitle').textContent =
+    total + ' ressource' + (total !== 1 ? 's' : '') +
+    (hasSpotify ? ' · YouTube & Spotify' : ' · touchez pour ouvrir dans YouTube');
+}
 
 function render() {
   const seen = new Set();
-  const filtered = VIDEOS.filter(v => {
+  const filtered = VIDEOS.filter((v, i) => {
     if (seen.has(v.u)) return false;
     seen.add(v.u);
     if (activeCat !== null && !v.c.includes(activeCat)) return false;
@@ -312,29 +655,43 @@ function render() {
   });
 
   document.getElementById('count').textContent =
-    filtered.length + ' vidéo' + (filtered.length !== 1 ? 's' : '');
+    filtered.length + ' résultat' + (filtered.length !== 1 ? 's' : '');
 
   const list = document.getElementById('list');
   if (!filtered.length) {
-    list.innerHTML = '<div class="empty">Aucune vidéo pour ces filtres.</div>';
+    list.innerHTML = '<div class="empty">Aucune ressource pour ces filtres.</div>';
     return;
   }
 
   list.innerHTML = filtered.map(v => {
-    const videoId = (v.u.match(/[?&]v=([^&]+)/) || [])[1] || '';
+    const idx = VIDEOS.indexOf(v);
+    const spotify = isSpotify(v.u);
+    const videoId = !spotify ? ((v.u.match(/[?&]v=([^&]+)/) || [])[1] || '') : '';
     const thumb = videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : '';
+    const thumbHtml = spotify
+      ? `<div class="video-thumb spotify-thumb">🎙️</div>`
+      : `<img class="video-thumb" src="${thumb}" alt="" loading="lazy">`;
     return `
-    <a class="video-card" href="${v.u}" target="_blank">
-      <img class="video-thumb" src="${thumb}" alt="" loading="lazy">
+    <a class="video-card" href="${v.u}" target="_blank" onclick="cardClick(event,${idx})">
+      ${thumbHtml}
       <div class="video-info">
-        <div class="video-title">${v.t}</div>
-        <div class="video-meta">${Math.round(v.d)} min · ${v.c.map(id => CAT_NAMES[id]).join(' · ')}</div>
+        <div class="video-title">${escHtml(v.t)}</div>
+        <div class="video-meta">${Math.round(v.d)} min · ${v.c.map(id => CAT_NAMES[id]).join(' · ')}${spotify ? ' · 🎙️ Podcast' : ''}</div>
       </div>
       <svg class="arrow-icon" viewBox="0 0 16 16" fill="none" stroke-width="1.5">
         <path d="M3 8h10M9 4l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
+      <button class="card-edit-btn" onclick="openEditEntry(event,${idx})">✏️</button>
     </a>
   `}).join('');
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function cardClick(e, idx) {
+  if (adminMode) e.preventDefault();
 }
 
 function buildCats() {
@@ -375,8 +732,347 @@ document.getElementById('dur').addEventListener('input', function() {
   render();
 });
 
+// =============================================
+// ADMIN PANEL OPEN/CLOSE
+// =============================================
+function openAdmin() {
+  document.getElementById('adminOverlay').classList.add('open');
+  if (ghState.token) {
+    showMainScreen();
+  } else {
+    document.getElementById('authScreen').style.display = '';
+    document.getElementById('mainScreen').style.display = 'none';
+    document.getElementById('editScreen').style.display = 'none';
+  }
+}
+
+function closeAdmin() {
+  document.getElementById('adminOverlay').classList.remove('open');
+}
+
+function overlayClick(e) {
+  if (e.target === document.getElementById('adminOverlay')) closeAdmin();
+}
+
+// =============================================
+// GITHUB AUTH
+// =============================================
+async function connectGitHub() {
+  const token  = document.getElementById('ghToken').value.trim();
+  const repo   = document.getElementById('ghRepo').value.trim();
+  const path   = document.getElementById('ghPath').value.trim();
+  const branch = document.getElementById('ghBranch').value.trim() || 'main';
+
+  if (!token || !repo || !path) {
+    showStatus('authStatus', 'error', 'Tous les champs sont requis.');
+    return;
+  }
+
+  showStatus('authStatus', 'loading', 'Connexion en cours…');
+  document.getElementById('connectBtn').disabled = true;
+
+  try {
+    const res = await githubGetFile(token, repo, path, branch);
+    ghState = { token, repo, path, branch, sha: res.sha };
+    showStatus('authStatus', 'success', 'Connecté ! Chargement de la bibliothèque…');
+
+    setTimeout(() => {
+      document.getElementById('ghToken').value = '';
+      showMainScreen();
+    }, 800);
+  } catch(e) {
+    showStatus('authStatus', 'error', 'Erreur : ' + e.message);
+    document.getElementById('connectBtn').disabled = false;
+  }
+}
+
+function disconnectGitHub() {
+  ghState = { token: null, repo: null, path: null, branch: 'main', sha: null };
+  adminMode = false;
+  document.getElementById('adminToggle').style.outline = '';
+  document.querySelector('.app').classList.remove('admin-mode');
+  closeAdmin();
+}
+
+// =============================================
+// GITHUB API
+// =============================================
+async function githubGetFile(token, repo, path, branch) {
+  const url = `https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`;
+  const res = await fetch(url, {
+    headers: { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json' }
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || res.status);
+  }
+  return res.json();
+}
+
+async function githubPutFile(content, message) {
+  const { token, repo, path, branch, sha } = ghState;
+  const encoded = btoa(unescape(encodeURIComponent(content)));
+  const res = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
+    method: 'PUT',
+    headers: {
+      Authorization: 'Bearer ' + token,
+      Accept: 'application/vnd.github+json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ message, content: encoded, sha, branch })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || res.status);
+  }
+  const data = await res.json();
+  ghState.sha = data.content.sha;
+  return data;
+}
+
+// =============================================
+// BUILD UPDATED HTML
+// =============================================
+function serializeVideos() {
+  return VIDEOS.map(v => {
+    const cats = '[' + v.c.join(',') + ']';
+    const title = v.t.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+    return `  {t:"${title}",u:"${v.u}",d:${v.d},c:${cats}}`;
+  }).join(',\n');
+}
+
+function rebuildHtml(currentHtml) {
+  // Replace the VIDEOS array in the HTML
+  const start = currentHtml.indexOf('const VIDEOS = [');
+  const end   = currentHtml.indexOf('];', start) + 2;
+  if (start === -1 || end === 1) throw new Error('Impossible de trouver le tableau VIDEOS dans le HTML.');
+  const newVideos = 'const VIDEOS = [\n' + serializeVideos() + '\n];';
+  return currentHtml.slice(0, start) + newVideos + currentHtml.slice(end);
+}
+
+async function publishChanges(statusId, commitMsg) {
+  showStatus(statusId, 'loading', 'Publication sur GitHub…');
+  try {
+    // Fetch current file content from GitHub to get latest version
+    const fileData = await githubGetFile(ghState.token, ghState.repo, ghState.path, ghState.branch);
+    ghState.sha = fileData.sha;
+    const currentHtml = decodeURIComponent(escape(atob(fileData.content.replace(/\n/g, ''))));
+    const newHtml = rebuildHtml(currentHtml);
+    await githubPutFile(newHtml, commitMsg);
+    showStatus(statusId, 'success', '✓ Publié sur GitHub ! Visible en ~30 secondes.');
+    render();
+    updateSubtitle();
+    return true;
+  } catch(e) {
+    showStatus(statusId, 'error', 'Erreur publication : ' + e.message);
+    return false;
+  }
+}
+
+// =============================================
+// SCREENS
+// =============================================
+function showMainScreen() {
+  adminMode = true;
+  document.querySelector('.app').classList.add('admin-mode');
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('editScreen').style.display = 'none';
+  document.getElementById('mainScreen').style.display = '';
+  // Update GitHub info tab
+  document.getElementById('ghRepoDisplay').textContent = ghState.repo;
+  document.getElementById('ghPathDisplay').textContent = ghState.path;
+  document.getElementById('ghBranchDisplay').textContent = ghState.branch;
+  // Build category checkboxes for add form
+  buildCatCheckboxes('newCats', []);
+  switchTab('add');
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const names = ['add','edit','github'];
+    t.classList.toggle('active', names[i] === name);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'edit') filterEditList();
+}
+
+// =============================================
+// ADD ENTRY
+// =============================================
+function onUrlInput() {
+  const url = document.getElementById('newUrl').value.trim();
+  const hint = document.getElementById('urlHint');
+  if (isSpotify(url)) {
+    hint.textContent = '🎙️ Spotify détecté — podcast/épisode';
+  } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
+    hint.textContent = '▶️ YouTube détecté';
+  } else {
+    hint.textContent = '';
+  }
+}
+
+async function addEntry() {
+  const url   = document.getElementById('newUrl').value.trim();
+  const title = document.getElementById('newTitle').value.trim();
+  const dur   = parseFloat(document.getElementById('newDur').value);
+  const cats  = getCheckedCats('newCats');
+
+  if (!url || !title || isNaN(dur) || cats.length === 0) {
+    showStatus('addStatus', 'error', 'Remplis tous les champs et sélectionne au moins une catégorie.');
+    return;
+  }
+  if (VIDEOS.some(v => v.u === url)) {
+    showStatus('addStatus', 'error', 'Cette URL est déjà dans la bibliothèque.');
+    return;
+  }
+
+  VIDEOS.unshift({ t: title, u: url, d: Math.round(dur * 10) / 10, c: cats });
+
+  document.getElementById('addBtn').disabled = true;
+  const ok = await publishChanges('addStatus', `Ajout : ${title.slice(0,60)}`);
+  document.getElementById('addBtn').disabled = false;
+
+  if (ok) {
+    document.getElementById('newUrl').value = '';
+    document.getElementById('newTitle').value = '';
+    document.getElementById('newDur').value = '';
+    document.getElementById('urlHint').textContent = '';
+    buildCatCheckboxes('newCats', []);
+  } else {
+    VIDEOS.shift(); // rollback
+  }
+}
+
+// =============================================
+// EDIT / DELETE ENTRY
+// =============================================
+function openEditEntry(e, idx) {
+  e.preventDefault();
+  e.stopPropagation();
+  editingIndex = idx;
+  const v = VIDEOS[idx];
+  document.getElementById('editUrl').value   = v.u;
+  document.getElementById('editTitle').value = v.t;
+  document.getElementById('editDur').value   = v.d;
+  buildCatCheckboxes('editCats', v.c);
+  document.getElementById('mainScreen').style.display = 'none';
+  document.getElementById('editScreen').style.display = '';
+  clearStatus('editStatus');
+}
+
+function closeEditScreen() {
+  document.getElementById('editScreen').style.display = 'none';
+  document.getElementById('mainScreen').style.display = '';
+}
+
+async function saveEdit() {
+  const title = document.getElementById('editTitle').value.trim();
+  const dur   = parseFloat(document.getElementById('editDur').value);
+  const cats  = getCheckedCats('editCats');
+
+  if (!title || isNaN(dur) || cats.length === 0) {
+    showStatus('editStatus', 'error', 'Remplis tous les champs et sélectionne au moins une catégorie.');
+    return;
+  }
+
+  const old = { ...VIDEOS[editingIndex] };
+  VIDEOS[editingIndex] = { t: title, u: old.u, d: Math.round(dur * 10) / 10, c: cats };
+
+  document.getElementById('saveBtn').disabled = true;
+  document.getElementById('deleteBtn').disabled = true;
+  const ok = await publishChanges('editStatus', `Modifié : ${title.slice(0,60)}`);
+  document.getElementById('saveBtn').disabled = false;
+  document.getElementById('deleteBtn').disabled = false;
+
+  if (!ok) VIDEOS[editingIndex] = old; // rollback
+}
+
+async function deleteEntry() {
+  if (!confirm('Supprimer cette entrée de la bibliothèque ?')) return;
+  const removed = VIDEOS.splice(editingIndex, 1)[0];
+
+  document.getElementById('saveBtn').disabled = true;
+  document.getElementById('deleteBtn').disabled = true;
+  const ok = await publishChanges('editStatus', `Supprimé : ${removed.t.slice(0,60)}`);
+  document.getElementById('saveBtn').disabled = false;
+  document.getElementById('deleteBtn').disabled = false;
+
+  if (ok) {
+    setTimeout(closeEditScreen, 1200);
+  } else {
+    VIDEOS.splice(editingIndex, 0, removed); // rollback
+  }
+}
+
+// Edit list in tab
+function filterEditList() {
+  const q = (document.getElementById('editSearch').value || '').toLowerCase();
+  const container = document.getElementById('editList');
+  const matches = VIDEOS.map((v,i) => ({v,i})).filter(({v}) =>
+    !q || v.t.toLowerCase().includes(q) || v.u.toLowerCase().includes(q)
+  ).slice(0, 30);
+
+  if (!matches.length) {
+    container.innerHTML = '<div style="font-size:13px;color:#aaa;text-align:center;padding:16px">Aucun résultat</div>';
+    return;
+  }
+
+  container.innerHTML = matches.map(({v,i}) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#faf9f6;border:1px solid #e0ddd8;border-radius:8px;cursor:pointer"
+         onclick="openEditEntry(event,${i})">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;color:#1a1a18;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(v.t)}</div>
+        <div style="font-size:11px;color:#aaa;margin-top:2px">${Math.round(v.d)} min · ${v.c.map(id => CAT_NAMES[id]).join(', ')}</div>
+      </div>
+      <span style="font-size:14px;color:#aaa">✏️</span>
+    </div>
+  `).join('');
+}
+
+// =============================================
+// CAT CHECKBOXES HELPER
+// =============================================
+function buildCatCheckboxes(containerId, selected) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = Object.entries(CAT_NAMES).map(([id, name]) => {
+    const checked = selected.includes(parseInt(id));
+    return `<label class="cat-check ${checked ? 'checked' : ''}" data-id="${id}">
+      <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleCatCheck(this)">
+      ${name}
+    </label>`;
+  }).join('');
+}
+
+function toggleCatCheck(input) {
+  input.closest('.cat-check').classList.toggle('checked', input.checked);
+}
+
+function getCheckedCats(containerId) {
+  return Array.from(document.querySelectorAll(`#${containerId} .cat-check.checked`))
+    .map(el => parseInt(el.dataset.id));
+}
+
+// =============================================
+// STATUS HELPERS
+// =============================================
+function showStatus(id, type, msg) {
+  const el = document.getElementById(id);
+  el.className = 'status-msg ' + type;
+  el.textContent = msg;
+}
+function clearStatus(id) {
+  const el = document.getElementById(id);
+  el.className = 'status-msg';
+  el.textContent = '';
+}
+
+// =============================================
+// INIT
+// =============================================
 buildCats();
 render();
+updateSubtitle();
 </script>
 </body>
 </html>
