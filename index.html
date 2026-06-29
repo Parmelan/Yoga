@@ -768,20 +768,37 @@ async function connectGitHub() {
     return;
   }
 
-  showStatus('authStatus', 'loading', 'Connexion en cours…');
+  const url = `https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`;
+  showStatus('authStatus', 'loading', `Requête vers : ${url}`);
   document.getElementById('connectBtn').disabled = true;
 
   try {
-    const res = await githubGetFile(token, repo, path, branch);
-    ghState = { token, repo, path, branch, sha: res.sha };
-    showStatus('authStatus', 'success', 'Connecté ! Chargement de la bibliothèque…');
+    const fetchRes = await fetch(url, {
+      headers: { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json' }
+    });
+    const data = await fetchRes.json();
 
+    if (!fetchRes.ok) {
+      const detail = [
+        `HTTP ${fetchRes.status}`,
+        `Message : ${data.message || '?'}`,
+        `URL : ${url}`,
+        `Token début : ${token.slice(0,8)}…`,
+        data.errors ? `Erreurs : ${JSON.stringify(data.errors)}` : ''
+      ].filter(Boolean).join(' | ');
+      showStatus('authStatus', 'error', detail);
+      document.getElementById('connectBtn').disabled = false;
+      return;
+    }
+
+    ghState = { token, repo, path, branch, sha: data.sha };
+    showStatus('authStatus', 'success', 'Connecté ! Chargement de la bibliothèque…');
     setTimeout(() => {
       document.getElementById('ghToken').value = '';
       showMainScreen();
     }, 800);
   } catch(e) {
-    showStatus('authStatus', 'error', 'Erreur : ' + e.message);
+    showStatus('authStatus', 'error', `Erreur réseau : ${e.message} | URL : ${url}`);
     document.getElementById('connectBtn').disabled = false;
   }
 }
